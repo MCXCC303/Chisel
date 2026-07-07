@@ -1,0 +1,49 @@
+/* ScanScreen, PackConfigScreen, PackProgressScreen */
+#scan-container, #config-container {
+    padding: 1 2;
+    height: 100%;
+}
+#pack-container {
+    padding: 1 2;
+    height: 100%;
+    align: center middle;
+}
+#list-container, #session-scroll {
+    height: 1fr;
+    border: solid $primary;
+    margin: 1 0;
+}
+#project-table, #session-table {
+    height: 100%;
+}
+#pack-progress-wrap {
+    height: auto;
+    padding: 1 0;
+}
+#pack-progress, #scan-progress {
+    width: 100%;
+}
+#pack-step, #pack-result {
+    text-align: center;
+    color: $text-muted;
+}
+#pack-detail {
+    text-align: center;
+    padding-bottom: 1;
+}
+#pack-result-box {
+    border: solid $primary;
+    padding: 1 2;
+    margin: 1 0;
+    height: 1fr;
+    overflow-y: auto;
+}
+#pack-container .title {
+    text-align: center;
+}
+#output-row {
+    height: auto;
+}
+#output-row Input {
+    width: 1fr;
+}

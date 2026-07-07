@@ -1,0 +1,18 @@
+/* SessionPreviewScreen */
+#preview-container {
+    padding: 1 2;
+    height: 100%;
+}
+#preview-scroll {
+    height: 1fr;
+    border: solid $surface;
+    padding: 1;
+    margin: 1 0;
+    overflow-x: auto;
+}
+#preview-content {
+    min-width: 100%;
+}
+#preview-title {
+    padding-bottom: 0;
+}

@@ -1,0 +1,4 @@
+*venv*
+test_*
+*.tar.gz
+*pycache*

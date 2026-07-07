@@ -1,0 +1,21 @@
+/* MessageScreen */
+MessageScreen {
+    align: center middle;
+}
+#msg-btn-row {
+    align: center middle;
+    height: auto;
+}
+#msg-wrapper {
+    align: center middle;
+    height: auto;
+    max-width: 60;
+    border: solid $primary;
+    padding: 1 2;
+    margin: 0;
+}
+.msg-text {
+    text-align: center;
+    padding: 1;
+    width: 100%;
+}

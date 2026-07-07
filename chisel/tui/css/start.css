@@ -1,0 +1,11 @@
+/* StartScreen */
+#start-container {
+    align: center middle;
+    height: 100%;
+    width: 100%;
+}
+#banner {
+    text-align: center;
+    width: 100%;
+    padding-bottom: 1;
+}

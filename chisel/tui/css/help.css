@@ -1,0 +1,25 @@
+/* HelpScreen */
+#help-container {
+    padding: 1 2;
+    height: 100%;
+}
+#help-panels {
+    height: 1fr;
+    margin: 1 0;
+}
+#help-nav {
+    width: 25%;
+    border: solid $surface;
+    padding: 1;
+}
+#help-content {
+    width: 75%;
+    border: solid $surface;
+    padding: 1 2;
+}
+#help-md {
+    height: auto;
+}
+#help-list {
+    height: 100%;
+}
