@@ -6,10 +6,10 @@
 ██║               ███████║██║███████╗█████╗      ██║               
 ██║               ██╔══██║██║╚════██║██╔══╝      ██║               
 ╚██████╗██║      ██║██║███████║███████╗███████╗
-   ╚═════╝╚═╝      ╚═╝╚═╝╚══════╝╚══════╝╚══════╝     
+   ╚═════╝╚═╝      ╚═╝╚═╝╚══════╝╚══════╝╚══════╝
 ```
 
-**Claude Code 会话历史记录迁移工具**
+<h1 aligh="center">Chisel - Claude Code 会话历史记录迁移工具</h1>
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![Textual](https://img.shields.io/badge/Textual-0.80+-0175C2)](https://github.com/Textualize/textual)
@@ -19,7 +19,7 @@
 
 ---
 
-Claude Code 会话历史记录迁移工具。在不同机器之间迁移对话记录，保留完整的会话上下文。
+使用 Chisel 快速在不同机器之间迁移 Claude Code 对话记录。
 
 ## 快速开始
 
