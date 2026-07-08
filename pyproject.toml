@@ -11,6 +11,9 @@ chisel = "chisel.cli:main"
 [tool.setuptools.packages.find]
 include = ["chisel", "chisel.*"]
 
+[tool.setuptools.package-data]
+chisel = ["help/*.md", "tui/css/*.css"]
+
 [build-system]
 requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
