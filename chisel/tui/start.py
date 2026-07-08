@@ -14,8 +14,7 @@ class StartScreen(Screen):
     """启动页面."""
 
     BINDINGS = [
-        Binding("escape", "quit", "退出", show=False),
-        Binding("ctrl+c", "quit", "退出", show=False),
+        Binding("ctrl+d", "quit", "退出"),
     ]
 
     BANNER = """\
@@ -36,6 +35,7 @@ class StartScreen(Screen):
             with Horizontal(classes="btn-row"):
                 yield Button("打包历史记录", variant="primary", id="btn-pack", classes="action-btn")
                 yield Button("解包历史记录", variant="primary", id="btn-unpack", classes="action-btn")
+                yield Button("清除无效记录", variant="primary", id="btn-clean", classes="action-btn")
             with Horizontal(classes="btn-row"):
                 yield Button("帮助", variant="default", id="btn-help")
                 yield Button("关于", variant="default", id="btn-about")
@@ -55,6 +55,11 @@ class StartScreen(Screen):
     def on_help(self) -> None:
         from .help import HelpScreen
         self.app.push_screen(HelpScreen())
+
+    @on(Button.Pressed, "#btn-clean")
+    def on_clean(self) -> None:
+        from .clean import OrphanScanScreen
+        self.app.push_screen(OrphanScanScreen())
 
     @on(Button.Pressed, "#btn-about")
     def on_about(self) -> None:

@@ -92,7 +92,7 @@ class ScanScreen(Screen):
             history = len(proj.history_entries)
             size = format_size(estimate_project_size(claude_dir, proj))
             table.add_row(
-                "✓", Path(proj.original_path).name,
+                "✓", proj.original_path,
                 str(sessions), str(history), size,
                 proj.original_path, key=str(i),
             )
@@ -126,7 +126,7 @@ class ScanScreen(Screen):
         def sort_key(idx: int) -> object:
             proj = self.scan_data.projects[idx]
             if col == "project":
-                return Path(proj.original_path).name.lower()
+                return proj.original_path.lower()
             elif col == "sessions":
                 return len(proj.sessions)
             elif col == "history":
@@ -146,7 +146,7 @@ class ScanScreen(Screen):
             history = len(proj.history_entries)
             size = format_size(estimate_project_size(claude_dir, proj))
             check = "✓" if i in self._selected else " "
-            table.add_row(check, Path(proj.original_path).name,
+            table.add_row(check, proj.original_path,
                           str(sessions), str(history), size,
                           proj.original_path, key=str(i))
 
@@ -322,7 +322,7 @@ class PackConfigScreen(Screen):
             tk = "✓" if sess.has_tasks else "-"
             preview = get_session_summaries(proj).get(uuid, "")
             table.add_row(
-                check, uuid[:12], Path(proj.original_path).name,
+                check, uuid[:12], proj.original_path,
                 str(msg_count), str(hist_count), fh, tk,
                 mtime, preview, key=uuid,
             )
@@ -412,7 +412,7 @@ class PackConfigScreen(Screen):
             if col == "uuid":
                 return uuid
             elif col == "project":
-                return Path(proj.original_path).name.lower()
+                return proj.original_path.lower()
             elif col == "messages":
                 return msg_count
             elif col == "history":
@@ -478,6 +478,9 @@ class PackConfigScreen(Screen):
 
 class PackProgressScreen(Screen):
     """打包进度和结果."""
+
+    BINDINGS = [
+    ]
 
     def __init__(self, data: ClaudeData, selected: list[ProjectEntry],
                  output_path: str, session_filter: set[str]) -> None:
@@ -550,7 +553,7 @@ class PackProgressScreen(Screen):
             ]
             for proj in self.selected:
                 active = len([s for s in proj.sessions if s.uuid in self.session_filter])
-                lines.append(f"  [dim]{Path(proj.original_path).name}[/dim]: {active} 会话")
+                lines.append(f"  [dim]{proj.original_path}[/dim]: {active} 会话")
             result.update("\n".join(lines))
             progress.update(progress=100)
             step.update("完成")

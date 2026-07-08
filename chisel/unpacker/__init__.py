@@ -1,16 +1,10 @@
-"""解包器：在新环境上解包并合并历史记录.
+"""解包器 —— 读取、校验、合并迁移包."""
 
-解包时读取占位符，接受用户指定的路径映射，
-将所有占位符替换为真实路径后写入目标环境。
-"""
+from ..utils import encode_project_path, safe_read_json, safe_read_jsonl, safe_write_json, safe_write_jsonl
+from .helpers import _bytes_replace, _collect_tar_entries, _load_json_from_tar, _load_jsonl_from_tar, _str_replace
+from .validate import PackageError, validate_package
 
-from __future__ import annotations
-
-import json
-import tarfile
-from pathlib import Path
-
-from .utils import encode_project_path, safe_read_json, safe_read_jsonl, safe_write_json, safe_write_jsonl
+__all__ = ["read_package_info", "unpack", "validate_package", "PackageError"]
 
 
 def read_package_info(package_path: str | Path) -> dict:
@@ -19,6 +13,8 @@ def read_package_info(package_path: str | Path) -> dict:
     Returns:
         metadata dict，包含 placeholders 信息
     """
+    from pathlib import Path
+    import json, tarfile
     package_path = Path(package_path)
     with tarfile.open(package_path, "r:gz") as tar:
         try:
@@ -26,47 +22,6 @@ def read_package_info(package_path: str | Path) -> dict:
             return json.loads(tar.extractfile(member).read().decode("utf-8"))
         except KeyError:
             return {}
-
-
-def _load_json_from_tar(tar: tarfile.TarFile, name: str) -> dict:
-    try:
-        member = tar.getmember(name)
-        return json.loads(tar.extractfile(member).read().decode("utf-8"))
-    except (KeyError, json.JSONDecodeError):
-        return {}
-
-
-def _load_jsonl_from_tar(tar: tarfile.TarFile, name: str) -> list[dict]:
-    try:
-        member = tar.getmember(name)
-        entries = []
-        for line in tar.extractfile(member).read().decode("utf-8").splitlines():
-            line = line.strip()
-            if line:
-                try:
-                    entries.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
-        return entries
-    except KeyError:
-        return []
-
-
-def _build_replacements(placeholder_to_path: dict[str, str]) -> list[tuple[str, str]]:
-    """构建替换列表: (占位符, 新路径)."""
-    return [(ph, new_path) for ph, new_path in placeholder_to_path.items()]
-
-
-def _str_replace(text: str, replacements: list[tuple[str, str]]) -> str:
-    """对文本执行所有替换."""
-    for old, new in replacements:
-        text = text.replace(old, new)
-    return text
-
-
-def _bytes_replace(data: bytes, replacements: list[tuple[str, str]]) -> bytes:
-    """对二进制内容执行所有替换."""
-    return _str_replace(data.decode("utf-8", errors="replace"), replacements).encode("utf-8")
 
 
 def unpack(
@@ -88,6 +43,9 @@ def unpack(
     Returns:
         操作报告 dict
     """
+    from pathlib import Path
+    import json, tarfile
+
     package_path = Path(package_path)
     target_claude_dir = Path(target_claude_dir)
     if target_claude_json_path is None:
@@ -98,13 +56,15 @@ def unpack(
     if placeholder_to_path is None:
         placeholder_to_path = {}
 
-    replacements = _build_replacements(placeholder_to_path)
+    replacements = [(ph, new_path) for ph, new_path in placeholder_to_path.items()]
+    from .helpers import _should_update_session
 
     report = {
         "dry_run": dry_run,
         "projects_merged": 0,
         "sessions_copied": 0,
         "sessions_skipped": 0,
+        "sessions_updated": 0,
         "file_history_copied": 0,
         "tasks_copied": 0,
         "history_entries_appended": 0,
@@ -127,7 +87,12 @@ def unpack(
                 src_path = f"projects/{index}/{uuid}.jsonl"
                 dest_path = proj_dest_dir / f"{uuid}.jsonl"
                 if dry_run:
-                    report["sessions_copied" if not dest_path.exists() else "sessions_skipped"] += 1
+                    if not dest_path.exists():
+                        report["sessions_copied"] += 1
+                    elif _should_update_session(tar, src_path, dest_path, replacements):
+                        report["sessions_updated"] += 1
+                    else:
+                        report["sessions_skipped"] += 1
                 else:
                     try:
                         member = tar.getmember(src_path)
@@ -137,6 +102,11 @@ def unpack(
                             content = _bytes_replace(content, replacements)
                             dest_path.write_bytes(content)
                             report["sessions_copied"] += 1
+                        elif _should_update_session(tar, src_path, dest_path, replacements):
+                            content = tar.extractfile(member).read()
+                            content = _bytes_replace(content, replacements)
+                            dest_path.write_bytes(content)
+                            report["sessions_updated"] += 1
                         else:
                             report["sessions_skipped"] += 1
                     except KeyError:
@@ -188,8 +158,6 @@ def unpack(
                         target_json["projects"] = {}
                     if new_path not in target_json["projects"]:
                         target_json["projects"][new_path] = {}
-
-                    # 替换占位符后合并
                     raw_data = json.dumps(partial_json["projects"][ph], ensure_ascii=False)
                     raw_data = _str_replace(raw_data, replacements)
                     proj_data = json.loads(raw_data)
@@ -206,12 +174,10 @@ def unpack(
                     (e.get("timestamp"), e.get("sessionId"), e.get("display"))
                     for e in existing_history
                 }
-
                 new_entries = []
                 for entry in partial_history:
                     if entry.get("project") == ph:
                         entry["project"] = new_path
-                    # 对其他字段也做替换
                     raw = json.dumps(entry, ensure_ascii=False)
                     raw = _str_replace(raw, replacements)
                     entry = json.loads(raw)
@@ -219,7 +185,6 @@ def unpack(
                     if key not in existing_keys:
                         new_entries.append(entry)
                         existing_keys.add(key)
-
                 if new_entries:
                     all_entries = existing_history + new_entries
                     all_entries.sort(key=lambda e: e.get("timestamp", 0))
@@ -238,8 +203,3 @@ def unpack(
                     pass
 
     return report
-
-
-def _collect_tar_entries(tar: tarfile.TarFile, prefix: str) -> list[str]:
-    """收集 tar 中指定前缀下的所有成员名（缓存用）."""
-    return [m.name for m in tar.getmembers() if m.name.startswith(prefix)]

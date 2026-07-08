@@ -122,6 +122,15 @@ def timestamp_str() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
+def has_special_chars(path: str) -> bool:
+    """检查路径是否含中文或特殊字符（可能导致编码碰撞）."""
+    for ch in path:
+        code = ord(ch)
+        if code > 127:  # 非 ASCII
+            return True
+    return False
+
+
 def default_target_path(original_path: str, basename: str) -> str:
     if not original_path:
         return f"/home/{os.getlogin()}/projects/{basename}"

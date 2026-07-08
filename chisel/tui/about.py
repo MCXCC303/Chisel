@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from textual import on
 from textual.app import ComposeResult
-from textual.binding import Binding
 from textual.containers import Container, Horizontal
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Label, Static
@@ -12,10 +11,6 @@ from textual.widgets import Button, Footer, Header, Label, Static
 
 class AboutScreen(Screen):
     """关于 Chisel."""
-
-    BINDINGS = [
-        Binding("escape", "pop_screen", "返回", show=False),
-    ]
 
     BANNER = """\
 [bold #f7971f] ██████╗██╗  ██╗██╗███████╗███████╗██╗     [/bold #f7971f]

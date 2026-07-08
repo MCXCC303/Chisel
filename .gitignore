@@ -2,3 +2,4 @@
 test_*
 *.tar.gz
 *pycache*
+*egg-info*

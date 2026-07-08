@@ -15,15 +15,19 @@ from textual.widgets import (
     Label, ProgressBar, Static,
 )
 
-from ..unpacker import read_package_info, unpack
+from ..unpacker import read_package_info, unpack, validate_package
 from .helpers import (
-    default_target_path, navigate_home, open_file_dialog, resolve_target_dir,
+    default_target_path, has_special_chars, navigate_home,
+    open_file_dialog, resolve_target_dir,
 )
 from .message import MessageScreen
 
 
 class UnpackSelectScreen(Screen):
     """选择要解包的迁移包文件."""
+
+    BINDINGS = [
+    ]
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -82,6 +86,15 @@ class UnpackSelectScreen(Screen):
         if not pkg.exists():
             self.app.push_screen(MessageScreen(f"文件不存在: {pkg_path}"))
             return
+
+        errors = validate_package(pkg_path)
+        if errors:
+            msg = "包校验失败:\n\n" + "\n".join(f"  • {e}" for e in errors[:8])
+            if len(errors) > 8:
+                msg += f"\n  • ... 还有 {len(errors) - 8} 个错误"
+            self.app.push_screen(MessageScreen(msg))
+            return
+
         if not target_dir:
             target_dir = str(Path.home() / ".claude")
         if not target_json:
@@ -91,6 +104,9 @@ class UnpackSelectScreen(Screen):
 
 class UnpackMapScreen(Screen):
     """配置占位符到新路径的映射."""
+
+    BINDINGS = [
+    ]
 
     def __init__(self, pkg_path: str, target_dir: str, target_json: str) -> None:
         super().__init__()
@@ -105,6 +121,7 @@ class UnpackMapScreen(Screen):
         with Container(id="unpack-map-container"):
             yield Label("配置项目路径映射", classes="title")
             yield Label("为包中的每个项目指定新环境上的路径", classes="subtitle")
+            yield Static("", id="path-warning", classes="subtitle")
             yield VerticalScroll(id="map-inputs")
             with Horizontal(classes="btn-row"):
                 yield Button("返回", variant="default", id="btn-back")
@@ -132,6 +149,19 @@ class UnpackMapScreen(Screen):
             return
 
         self.placeholders = list(phs.items())
+
+        # 检查路径是否含特殊字符，显示警告
+        has_warning = False
+        for _, meta in self.placeholders:
+            original = meta.get("original_path", "")
+            if has_special_chars(original):
+                has_warning = True
+                break
+        if has_warning:
+            self.query_one("#path-warning", Static).update(
+                "[bold #ff9800]⚠ 包中含有中文或特殊字符路径，建议映射到纯 ASCII 路径以避免编码碰撞[/bold #ff9800]"
+            )
+
         container = self.query_one("#map-inputs", VerticalScroll)
         for ph, meta in self.placeholders:
             basename = meta.get("basename", "unknown")
@@ -184,6 +214,9 @@ class UnpackMapScreen(Screen):
 
 class UnpackProgressScreen(Screen):
     """解包进度和结果."""
+
+    BINDINGS = [
+    ]
 
     def __init__(self, pkg_path: str, target_dir: str, target_json: str,
                  mapping: dict[str, str]) -> None:
@@ -252,6 +285,7 @@ class UnpackProgressScreen(Screen):
                 f"[bold]目标目录:[/bold] {self.target_dir}", "",
                 f"[bold]项目已合并:[/bold] {report['projects_merged']}",
                 f"[bold]会话已复制:[/bold] {report['sessions_copied']}",
+                f"[bold]会话已更新:[/bold] {report.get('sessions_updated', 0)}",
                 f"[bold]会话已跳过:[/bold] {report['sessions_skipped']}",
                 f"[bold]文件历史:[/bold] {report['file_history_copied']}",
                 f"[bold]任务数据:[/bold] {report['tasks_copied']}",

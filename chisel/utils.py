@@ -36,6 +36,16 @@ def encode_project_path(project_path: str) -> str:
     return result
 
 
+def encode_project_path_legacy(project_path: str) -> str:
+    """旧版 Claude Code 编码（将 _ 也替换为 -）。
+
+    早期版本把所有特殊字符包括 _ 都映射为 -，
+    产生更严重的碰撞（中文路径在旧编码下完全无法区分字符数量）。
+    """
+    result = encode_project_path(project_path)
+    return result.replace("_", "-")
+
+
 def decode_project_path(encoded_name: str) -> str | None:
     """从编码名尝试恢复原始路径。
 

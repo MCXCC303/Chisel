@@ -37,8 +37,15 @@ class ChiselApp(App):
     CSS = _load_css()
 
     BINDINGS = [
-        Binding("ctrl+c", "quit", "退出", priority=True),
+        Binding("ctrl+c", "safe_back", "返回", priority=True),
+        Binding("ctrl+d", "quit", "退出", priority=True),
     ]
 
     def on_mount(self) -> None:
         self.push_screen(StartScreen())
+
+    def action_safe_back(self) -> None:
+        """安全返回：仅在有多个用户 screen 时弹出，不弹出根页面."""
+        if len(self._screen_stack) <= 2:
+            return  # 仅剩 _default + 当前页，不再弹出
+        self.pop_screen()

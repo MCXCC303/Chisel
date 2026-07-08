@@ -6,7 +6,6 @@ from pathlib import Path
 
 from textual import on
 from textual.app import ComposeResult
-from textual.binding import Binding
 from textual.containers import Container, Horizontal, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Label, ListItem, ListView, Markdown
@@ -21,6 +20,10 @@ HELP_FILE_MAP = {
     "解包 (Unpack)": "04-unpack.md",
     "预览 (Preview)": "05-preview.md",
     "快捷操作": "06-shortcuts.md",
+    "清除无效记录": "07-clean.md",
+    "错误排查": "08-troubleshooting.md",
+    "注意事项": "09-notes.md",
+    "声明": "10-disclaims.md",
 }
 
 
@@ -39,10 +42,6 @@ def _load_help_sections() -> dict[str, str]:
 class HelpScreen(Screen):
     """程序帮助文档 — 左侧标题列表 + 右侧 Markdown 渲染."""
 
-    BINDINGS = [
-        Binding("escape", "pop_screen", "返回", show=False),
-    ]
-
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         with Container(id="help-container"):
@@ -54,7 +53,11 @@ class HelpScreen(Screen):
                         ListItem(Label("工作原理")),
                         ListItem(Label("打包 (Pack)")),
                         ListItem(Label("解包 (Unpack)")),
+                        ListItem(Label("清除无效记录")),
                         ListItem(Label("预览 (Preview)")),
+                        ListItem(Label("错误排查")),
+                        ListItem(Label("注意事项")),
+                        ListItem(Label("声明")),
                         ListItem(Label("快捷操作")),
                         id="help-list",
                     )
