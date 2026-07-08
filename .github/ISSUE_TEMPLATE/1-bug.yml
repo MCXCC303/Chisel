@@ -1,0 +1,87 @@
+name: Bug 报告
+description: 报告一个可复现的程序异常
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: checkboxes
+    attributes:
+      label: 是否已搜索已有 Issue
+      description: 请先确认没有重复的 Bug 报告
+      options:
+        - label: 我已搜索并确认此 Bug 未被报告过
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Chisel 版本
+      description: 运行 `chisel --version` 获取
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: 操作系统
+      description: 发行版名称及版本号
+      placeholder: "Arch Linux / macOS 14.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python 版本
+      placeholder: "3.12.3"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 功能模块
+      description: 异常出现在哪个功能区域
+      options:
+        - scan（扫描）
+        - pack（打包）
+        - unpack（解包）
+        - info（包信息）
+        - cleanup（清理）
+        - TUI（交互界面）
+        - CLI（命令行）
+        - 其他 / 不确定
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: 现象描述
+      description: 发生了什么？预期行为是什么？
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 执行命令 '...'
+        2. 选择项目 '...'
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: error
+    attributes:
+      label: 错误输出
+      description: 终端中打印的 traceback 或错误信息
+      render: text
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充上下文
+      description: 项目迁移数量、会话规模、特殊路径等
