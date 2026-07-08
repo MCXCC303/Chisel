@@ -1,0 +1,76 @@
+/* EditorScreen */
+#editor-title {
+    padding: 1 2;
+    background: $boost;
+    color: $text-muted;
+    margin-bottom: 0;
+}
+#editor-container {
+    height: 1fr;
+    border: solid $primary-background;
+}
+#editor-textarea {
+    height: 1fr;
+}
+#editor-status {
+    padding: 0 1;
+    width: auto;
+}
+
+/* Auth Modal — same centered style as message dialog */
+#auth-modal {
+    align: center middle;
+    height: auto;
+    max-width: 50;
+    border: solid $primary;
+    padding: 1 2;
+    margin: 0;
+}
+#auth-modal .title {
+    text-align: center;
+    width: 100%;
+    padding-bottom: 1;
+}
+#auth-modal .subtitle {
+    text-align: center;
+    width: 100%;
+    color: $text-muted;
+    padding-bottom: 1;
+}
+#auth-btn-row {
+    align: center middle;
+    height: auto;
+}
+#auth-password {
+    width: 100%;
+    margin: 1 0;
+}
+#auth-error {
+    text-align: center;
+    height: 1;
+    margin-bottom: 1;
+}
+
+/* File Select Modal */
+#file-select-modal {
+    align: center middle;
+    height: auto;
+    max-width: 50;
+    border: solid $primary;
+    padding: 1 2;
+    margin: 0;
+}
+#file-select-modal .title {
+    text-align: center;
+    width: 100%;
+    padding-bottom: 1;
+}
+#file-list {
+    height: 1fr;
+    max-height: 30;
+    margin: 1 0;
+}
+#file-btn-row {
+    align: center middle;
+    height: auto;
+}

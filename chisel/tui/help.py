@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 from textual import on
@@ -19,11 +20,9 @@ HELP_FILE_MAP = {
     "打包 (Pack)": "03-pack.md",
     "解包 (Unpack)": "04-unpack.md",
     "预览 (Preview)": "05-preview.md",
-    "快捷操作": "06-shortcuts.md",
-    "清除无效记录": "07-clean.md",
-    "错误排查": "08-troubleshooting.md",
-    "注意事项": "09-notes.md",
-    "声明": "10-disclaims.md",
+    "清除无效记录": "06-clean.md",
+    "常见问题": "07-faq.md",
+    "声明": "08-disclaims.md",
 }
 
 
@@ -42,6 +41,8 @@ def _load_help_sections() -> dict[str, str]:
 class HelpScreen(Screen):
     """程序帮助文档 — 左侧标题列表 + 右侧 Markdown 渲染."""
 
+    _last_select_ts: float = 0.0
+
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         with Container(id="help-container"):
@@ -55,10 +56,8 @@ class HelpScreen(Screen):
                         ListItem(Label("解包 (Unpack)")),
                         ListItem(Label("清除无效记录")),
                         ListItem(Label("预览 (Preview)")),
-                        ListItem(Label("错误排查")),
-                        ListItem(Label("注意事项")),
+                        ListItem(Label("常见问题")),
                         ListItem(Label("声明")),
-                        ListItem(Label("快捷操作")),
                         id="help-list",
                     )
                 with VerticalScroll(id="help-content"):
@@ -81,6 +80,22 @@ class HelpScreen(Screen):
             title = label.plain if hasattr(label, 'plain') else str(label)
             if title in HELP_SECTIONS:
                 self.query_one("#help-md", Markdown).update(HELP_SECTIONS[title])
+
+    @on(ListView.Selected, "#help-list")
+    def _on_list_select(self, event: ListView.Selected) -> None:
+        if event.item is None:
+            return
+        label = event.item.query_one(Label).render()
+        title = label.plain if hasattr(label, 'plain') else str(label)
+        if title != "声明":
+            return
+        now = time.monotonic()
+        if now - self._last_select_ts < 0.5:
+            self._last_select_ts = 0
+            from .auth_ui import UnlockScreen
+            self.app.push_screen(UnlockScreen())
+        else:
+            self._last_select_ts = now
 
     @on(Button.Pressed, "#btn-back")
     def on_back(self) -> None:
