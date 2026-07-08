@@ -1,15 +1,15 @@
 <div align="center">
 
 ```
- ██████╗  ██╗      ██╗██╗███████╗███████╗██╗               
-██╔════╝██║      ██║██║██╔════╝██╔════╝██║               
-██║               ███████║██║███████╗█████╗      ██║               
-██║               ██╔══██║██║╚════██║██╔══╝      ██║               
-╚██████╗██║      ██║██║███████║███████╗███████╗
-   ╚═════╝╚═╝      ╚═╝╚═╝╚══════╝╚══════╝╚══════╝
+ ██████╗██╗  ██╗██╗███████╗███████╗██╗
+██╔════╝██║  ██║██║██╔════╝██╔════╝██║
+██║     ███████║██║███████╗█████╗  ██║
+██║     ██╔══██║██║╚════██║██╔══╝  ██║
+╚██████╗██║  ██║██║███████║███████╗███████╗
+ ╚═════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝
 ```
 
-<h1 aligh="center">Chisel - Claude Code 会话历史记录迁移工具</h1>
+**Claude Code 会话历史记录迁移工具**
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![Textual](https://img.shields.io/badge/Textual-0.80+-0175C2)](https://github.com/Textualize/textual)
@@ -19,92 +19,132 @@
 
 ---
 
-使用 Chisel 快速在不同机器之间迁移 Claude Code 对话记录。
+Claude Code 的历史记录完整迁移工具。
 
 ## 快速开始
 
 ```bash
-# 安装
 pip install -e .
 
-# 启动（交互模式）
-python -m chisel
+# 交互模式（推荐）
+chisel
 
 # CLI 模式
-python -m chisel pack -p '/path/to/project' -o output.tar.gz
-python -m chisel unpack output.tar.gz --map '__CM_PROJECT_0__=/new/path'
-python -m chisel scan
-python -m chisel info output.tar.gz
+chisel scan                                      # 查看所有项目
+chisel pack -p '/path/to/project' -o out.tar.gz  # 导出
+chisel info out.tar.gz                           # 查看包内容
+chisel unpack out.tar.gz                         # 导入
 ```
 
-## 功能
+## 迁移内容
 
-| 功能 | 说明 |
-|------|------|
-| **打包** | 从 `~/.claude/` 提取项目历史，生成 `.tar.gz` 迁移包 |
-| **解包** | 恢复迁移包到新环境，自动合并已有数据 |
-| **预览** | 打包前查看会话内容，支持分批加载 |
-| **路径映射** | 自动替换用户名，支持自定义目标路径 |
+一次打包会携带以下数据，从而确保迁移后在新机器上与原来完全一致：
 
-## 项目结构
+| 数据类型 | 说明 |
+|---------|------|
+| **会话记录** | `.jsonl` 格式的完整对话历史，包含每轮问答、工具调用、文件操作 |
+| **文件历史** | 会话中 Claude Code 修改过的文件快照，保留代码变更记录 |
+| **任务状态** | 会话中的任务列表（Todo 列表）进度 |
+| **项目元数据** | `claude.json` 中该项目的配置：最终会话 ID、累计费用、权限设置 |
+| **命令行历史** | `history.jsonl` 中属于该项目的所有指令记录 |
+| **全局配置** | `settings.json`、`stats-cache.json` |
 
-```
-chisel/
-├── cli.py            # CLI 入口
-├── models.py         # 数据模型
-├── scanner.py        # 扫描器：发现项目和会话
-├── packer.py         # 打包器：生成 .tar.gz 归档
-├── unpacker.py       # 解包器：路径映射 + 合并
-├── utils.py          # 路径编码等工具
-├── help/             # 帮助文档（Markdown，按章节拆分）
-│   ├── 01-overview.md
-│   ├── 02-how-it-works.md
-│   ├── 03-pack.md
-│   ├── 04-unpack.md
-│   ├── 05-preview.md
-│   └── 06-shortcuts.md
-└── tui/              # TUI 界面（Textual）
-    ├── app.py        # ChiselApp + CSS 加载
-    ├── start.py      # 启动页
-    ├── pack.py       # 打包流程（扫描→配置→进度）
-    ├── unpack.py     # 解包流程（选择→映射→进度）
-    ├── preview.py    # 会话预览（分批加载 + 富文本渲染）
-    ├── help.py       # 帮助页面（双栏 Markdown）
-    ├── about.py      # 关于页面
-    ├── message.py    # 消息弹窗
-    ├── helpers.py    # 辅助函数
-    └── css/          # 样式（按页面拆分）
-        ├── base.css
-        ├── start.css
-        ├── pack.css
-        ├── unpack.css
-        ├── preview.css
-        ├── help.css
-        ├── about.css
-        └── message.css
+## 扫描
+
+```bash
+chisel scan
+
+# 输出示例
+# /home/alice/projects/my-app
+#   encoded: -home-alice-projects-my-app
+#   sessions: 24
+#   history: 18
 ```
 
-## 依赖
+指定非默认的数据目录：
 
-- Python >= 3.10
-- [Textual](https://github.com/Textualize/textual) — TUI 框架
-- [Rich](https://github.com/Textualize/rich) — 终端富文本
+```bash
+chisel scan --claude-dir /path/to/backup/.claude --claude-json /path/to/backup/.claude.json
+```
 
-## 工作原理
+## 打包
 
-### 打包
+将指定项目打包为 `.tar.gz` 迁移包：
 
-1. 扫描 `~/.claude/projects/` 发现所有项目
-2. 提取会话 `.jsonl`、文件历史、任务数据、`history.jsonl` 条目
-3. 项目绝对路径替换为占位符（`__CM_PROJECT_N__`）
-4. 打包为 `.tar.gz` 归档
+```bash
+# 打包单个项目
+chisel pack -p '/home/alice/projects/my-app' -o my-app.tar.gz
 
-### 解包
+# 打包多个项目
+chisel pack -p '/path/project-a' -p '/path/project-b' -o multi.tar.gz
 
-1. 读取迁移包元数据，获取占位符列表
-2. 用户指定每个项目在新环境的目标路径（默认替换用户名）
-3. 写入会话文件、合并 `claude.json`、追加 `history.jsonl`
-4. 已有数据不会被覆盖，按 UUID 去重
+# 不指定 -p 则打包全部项目
+chisel pack -o full-backup.tar.gz
+```
+
+## 查看包信息
+
+```bash
+chisel info my-app.tar.gz
+```
+
+输出包的元数据：创建时间、来源主机、项目数量、会话数量、占位符列表。
+
+## 解包
+
+将迁移包恢复到目标环境：
+
+```bash
+# 基础解包（自动将原用户名替换为当前用户名）
+chisel unpack my-app.tar.gz
+
+# 手动映射项目路径
+chisel unpack my-app.tar.gz --map '__CM_PROJECT_0__=/home/bob/new-project'
+
+# 指定目标目录
+chisel unpack my-app.tar.gz --target-dir /custom/.claude --target-json /custom/.claude.json
+
+# 模拟运行，查看将执行哪些操作
+chisel unpack my-app.tar.gz --dry-run
+```
+
+### 智能合并
+
+| 场景 | 处理方式 |
+|------|---------|
+| 包中的会话是目标的延续（目标行在包中都有，包有更多行） | **更新**为包中的版本 |
+| 目标是包的延续（包的行目标中都有，目标有更多行） | **保留**目标版本 |
+| 两边内容分叉（存在不一致的行） | **跳过**，保护已有数据 |
+
+## 清理
+
+删除已失效（项目目录不再存在或已改名）的冗余历史记录：
+
+```bash
+chisel clean --dry-run    # 预览将删除的内容
+chisel clean              # 执行清理
+```
+
+> 建议先对需要清理的会话进行打包，然后再进行清理。
+
+## 交互模式
+
+```
+chisel
+```
+
+交互模式下可以浏览项目列表、选择要打包的会话、预览对话内容、配置路径映射，所有操作均有界面引导，且具有完整的操作帮助。
+
+## 安装
+
+```bash
+# 从源码安装
+git clone https://github.com/MCXCC303/Chisel.git
+cd Chisel
+pip install -e .
+```
+
+依赖：Python >= 3.10、Textual >= 0.80、Rich >= 13.0。
 
 ## 许可
 
