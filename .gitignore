@@ -3,3 +3,5 @@ test_*
 *.tar.gz
 *pycache*
 *egg-info*
+.idea
+.claude
