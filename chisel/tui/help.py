@@ -63,7 +63,7 @@ class HelpScreen(Screen):
                 with VerticalScroll(id="help-content"):
                     yield Markdown("加载中...", id="help-md")
             with Horizontal(classes="btn-row"):
-                yield Button("返回", variant="primary", id="btn-back")
+                yield Button("返回", variant="warning", id="btn-back")
         yield Footer()
 
     def on_mount(self) -> None:

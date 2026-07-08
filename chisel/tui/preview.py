@@ -45,8 +45,8 @@ class SessionPreviewScreen(Screen):
             with VerticalScroll(id="preview-scroll"):
                 yield Static("正在加载...", id="preview-content")
             with Horizontal(classes="btn-row"):
+                yield Button("返回", variant="warning", id="btn-back")
                 yield Button("加载更多 ↑", variant="default", id="btn-more")
-                yield Button("返回", variant="default", id="btn-back")
         yield Footer()
 
     def on_mount(self) -> None:

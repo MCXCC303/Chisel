@@ -32,7 +32,7 @@ class AboutScreen(Screen):
             from .. import __version__
             yield Label(f"Version {__version__}", classes="about-version")
             with Horizontal(classes="btn-row"):
-                yield Button("返回", variant="primary", id="btn-back")
+                yield Button("返回", variant="warning", id="btn-back")
         yield Footer()
 
     @on(Button.Pressed, "#btn-back")

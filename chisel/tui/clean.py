@@ -45,9 +45,9 @@ class OrphanScanScreen(Screen):
             with VerticalScroll(id="list-container"):
                 yield DataTable(id="orphan-table", cursor_type="row")
             with Horizontal(classes="btn-row"):
+                yield Button("返回主页", variant="warning", id="btn-home")
                 yield Button("全选", variant="default", id="btn-all")
                 yield Button("取消全选", variant="default", id="btn-none")
-                yield Button("返回主页", variant="default", id="btn-home")
                 yield Button("下一步 →", variant="primary", id="btn-confirm")
         yield Footer()
 
@@ -203,11 +203,11 @@ class OrphanConfigScreen(Screen):
             with VerticalScroll(id="session-scroll"):
                 yield DataTable(id="session-table", cursor_type="row")
             with Horizontal(classes="btn-row"):
+                yield Button("返回", variant="warning", id="btn-back")
+                yield Button("返回主页", variant="warning", id="btn-home")
                 yield Button("全选", variant="default", id="btn-all-sess")
                 yield Button("取消全选", variant="default", id="btn-none-sess")
-                yield Button("返回", variant="default", id="btn-back")
                 yield Button("预览", variant="default", id="btn-preview")
-                yield Button("返回主页", variant="default", id="btn-home")
                 yield Button("删除选中 →", variant="error", id="btn-delete")
         yield Footer()
 
@@ -388,7 +388,7 @@ class OrphanProgressScreen(Screen):
             with Vertical(id="pack-result-box"):
                 yield Static("", id="pack-result")
             with Horizontal(classes="btn-row"):
-                yield Button("返回主菜单", variant="primary", id="btn-back")
+                yield Button("返回主菜单", variant="warning", id="btn-back")
         yield Footer()
 
     def on_mount(self) -> None:

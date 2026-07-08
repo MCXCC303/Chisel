@@ -25,8 +25,15 @@ class UnlockScreen(ModalScreen[None]):
     def on_mount(self) -> None:
         self.query_one("#auth-password", Input).focus()
 
+    @on(Input.Submitted, "#auth-password")
+    def on_auth_submit(self) -> None:
+        self._do_auth()
+
     @on(Button.Pressed, "#btn-auth-ok")
     def on_auth_ok(self) -> None:
+        self._do_auth()
+
+    def _do_auth(self) -> None:
         password = self.query_one("#auth-password", Input).value
         if verify_password(password):
             self.app.push_screen(FileSelectScreen())

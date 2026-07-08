@@ -38,9 +38,9 @@ class EditorScreen(Screen):
                 tab_behavior="focus",
             )
         with Horizontal(classes="btn-row"):
-            yield Button("保存 (Ctrl+S)", variant="primary", id="btn-save")
             yield Button("取消", variant="default", id="btn-cancel")
             yield Label("", id="editor-status")
+            yield Button("保存 (Ctrl+S)", variant="primary", id="btn-save")
         yield Footer()
 
     def on_mount(self) -> None:

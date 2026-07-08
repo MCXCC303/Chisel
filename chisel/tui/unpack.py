@@ -47,8 +47,8 @@ class UnpackSelectScreen(Screen):
             yield Label("目标 .claude.json 路径 (留空使用默认)", classes="label-hint")
             yield Input(placeholder=str(Path.home() / ".claude.json"), id="target-json")
             with Horizontal(classes="btn-row"):
-                yield Button("返回", variant="default", id="btn-back")
-                yield Button("返回主页", variant="default", id="btn-home")
+                yield Button("返回", variant="warning", id="btn-back")
+                yield Button("返回主页", variant="warning", id="btn-home")
                 yield Button("下一步 →", variant="primary", id="btn-next")
         yield Footer()
 
@@ -124,8 +124,8 @@ class UnpackMapScreen(Screen):
             yield Static("", id="path-warning", classes="subtitle")
             yield VerticalScroll(id="map-inputs")
             with Horizontal(classes="btn-row"):
-                yield Button("返回", variant="default", id="btn-back")
-                yield Button("返回主页", variant="default", id="btn-home")
+                yield Button("返回", variant="warning", id="btn-back")
+                yield Button("返回主页", variant="warning", id="btn-home")
                 yield Button("开始解包 →", variant="primary", id="btn-next")
         yield Footer()
 
@@ -237,7 +237,7 @@ class UnpackProgressScreen(Screen):
             with Vertical(id="unpack-result-box"):
                 yield Static("", id="unpack-result")
             with Horizontal(classes="btn-row"):
-                yield Button("返回主菜单", variant="primary", id="btn-back")
+                yield Button("返回主菜单", variant="warning", id="btn-back")
         yield Footer()
 
     def on_mount(self) -> None:

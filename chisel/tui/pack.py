@@ -52,9 +52,9 @@ class ScanScreen(Screen):
             with VerticalScroll(id="list-container"):
                 yield DataTable(id="project-table", cursor_type="row")
             with Horizontal(classes="btn-row"):
+                yield Button("返回主页", variant="warning", id="btn-home")
                 yield Button("全选", variant="default", id="btn-all")
                 yield Button("取消全选", variant="default", id="btn-none")
-                yield Button("返回主页", variant="default", id="btn-home")
                 yield Button("确认 →", variant="primary", id="btn-confirm")
         yield Footer()
 
@@ -259,8 +259,8 @@ class PackConfigScreen(Screen):
         total = sum(len(p.sessions) for p in self.selected)
         yield Header(show_clock=True)
         with Container(id="config-container"):
-            yield Label(f"已选 {len(self.selected)} 个项目，共 {total} 个会话", id="config-title", classes="title")
-            yield Label("空格选择 双击切换 点击表头排序", classes="subtitle")
+            yield Label(f"选择要打包的会话", classes="title")
+            yield Label(f"已选 {len(self.selected)} 个项目，共 {total} 个会话", id="config-subtitle", classes="subtitle")
             with VerticalScroll(id="session-scroll"):
                 yield DataTable(id="session-table", cursor_type="row")
             yield Label("输出文件路径", classes="label-hint")
@@ -271,11 +271,11 @@ class PackConfigScreen(Screen):
                 )
                 yield Button("\U0001F4C2", variant="default", id="btn-browse-out", classes="browse-btn")
             with Horizontal(classes="btn-row"):
+                yield Button("返回", variant="warning", id="btn-back")
+                yield Button("返回主页", variant="warning", id="btn-home")
                 yield Button("全选", variant="default", id="btn-all-sess")
                 yield Button("取消全选", variant="default", id="btn-none-sess")
-                yield Button("返回", variant="default", id="btn-back")
                 yield Button("预览", variant="default", id="btn-preview")
-                yield Button("返回主页", variant="default", id="btn-home")
                 yield Button("开始打包 →", variant="primary", id="btn-start")
         yield Footer()
 
@@ -297,9 +297,17 @@ class PackConfigScreen(Screen):
             summaries.update(get_session_summaries(proj))
 
         self._all_uuids = []
+        self._stale_uuids: set[str] = set()
+        seen_uuids: set[str] = set()
         for proj in self.selected:
             for s in proj.sessions:
-                self._all_uuids.append(s.uuid)
+                key = s.uuid
+                if s.uuid in seen_uuids:
+                    key = s.uuid + "__dup"
+                    self._stale_uuids.add(key)
+                else:
+                    seen_uuids.add(s.uuid)
+                self._all_uuids.append(key)
                 msg_count = count_jsonl_lines(s.jsonl_path) if s.jsonl_path else 0
                 hist_count = sum(1 for e in proj.history_entries if e.get("sessionId") == s.uuid)
                 mtime = ""
@@ -307,25 +315,42 @@ class PackConfigScreen(Screen):
                     ts = s.jsonl_path.stat().st_mtime
                     mtime = datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
                 preview = summaries.get(s.uuid, "")
-                self._session_info[s.uuid] = (proj, s, msg_count, hist_count, mtime)
+                self._session_info[key] = (proj, s, msg_count, hist_count, mtime)
 
-        self._selected_uuids = set(self._all_uuids)
+        self._selected_uuids = {
+            k for k in self._all_uuids if k not in self._stale_uuids
+        }
         self._render_table()
+        self._update_session_status()
 
     def _render_table(self) -> None:
         table = self.query_one("#session-table", DataTable)
         table.clear()
-        for uuid in self._all_uuids:
-            proj, sess, msg_count, hist_count, mtime = self._session_info[uuid]
-            check = "✓" if uuid in self._selected_uuids else " "
+        for key in self._all_uuids:
+            proj, sess, msg_count, hist_count, mtime = self._session_info[key]
+            is_stale = key in self._stale_uuids
+            check = " " if is_stale else ("✓" if key in self._selected_uuids else " ")
             fh = "✓" if sess.has_file_history else "-"
             tk = "✓" if sess.has_tasks else "-"
+            uuid = key.replace("__dup", "")
             preview = get_session_summaries(proj).get(uuid, "")
-            table.add_row(
-                check, uuid[:12], proj.original_path,
-                str(msg_count), str(hist_count), fh, tk,
-                mtime, preview, key=uuid,
-            )
+            if is_stale:
+                dim = "[dim #666666]"
+                end = "[/]"
+                table.add_row(
+                    f"{dim}{check}{end}", f"{dim}{uuid[:12]}{end}",
+                    f"{dim}{proj.original_path}{end}",
+                    f"{dim}{msg_count}{end}", f"{dim}{hist_count}{end}",
+                    f"{dim}{fh}{end}", f"{dim}{tk}{end}",
+                    f"{dim}{mtime}{end}", f"{dim}{preview[:60]}{end}",
+                    key=key,
+                )
+            else:
+                table.add_row(
+                    check, uuid[:12], proj.original_path,
+                    str(msg_count), str(hist_count), fh, tk,
+                    mtime, preview, key=key,
+                )
 
     # --- 选择 ---
 
@@ -340,9 +365,12 @@ class PackConfigScreen(Screen):
         table = self.query_one("#session-table", DataTable)
         try:
             row = table.ordered_rows[table.cursor_row]
-            uuid = str(row.key.value) if hasattr(row.key, 'value') else str(row.key)
+            key = str(row.key.value) if hasattr(row.key, 'value') else str(row.key)
         except (IndexError, AttributeError, KeyError):
             return
+        if key in self._stale_uuids:
+            return
+        uuid = key
         if uuid in self._selected_uuids:
             self._selected_uuids.discard(uuid)
         else:
@@ -359,10 +387,12 @@ class PackConfigScreen(Screen):
     @on(Button.Pressed, "#btn-all-sess")
     def select_all_sessions(self) -> None:
         table = self.query_one("#session-table", DataTable)
-        for uuid in self._all_uuids:
-            self._selected_uuids.add(uuid)
+        for key in self._all_uuids:
+            if key in self._stale_uuids:
+                continue
+            self._selected_uuids.add(key)
             try:
-                table.update_cell(uuid, "check", "✓")
+                table.update_cell(key, "check", "✓")
             except Exception:
                 pass
         self._update_session_status()
@@ -381,11 +411,10 @@ class PackConfigScreen(Screen):
 
     def _update_session_status(self) -> None:
         try:
-            title = self.query_one("#config-title", Label)
-            title.update(
-                f"已选 {len(self.selected)} 个项目，共 {len(self._all_uuids)} 个会话 | "
-                f"已选 {len(self._selected_uuids)} | "
-                "空格选择 双击切换 点击表头排序"
+            active = len(self._all_uuids) - len(self._stale_uuids)
+            self.query_one("#config-subtitle", Label).update(
+                f"已选 {len(self.selected)} 个项目，共 {active} 个会话 | "
+                f"已选 {len(self._selected_uuids)}"
             )
         except Exception:
             pass
@@ -503,7 +532,7 @@ class PackProgressScreen(Screen):
                 yield Static("", id="pack-result")
             with Horizontal(classes="btn-row"):
                 yield Button("打开文件夹", variant="default", id="btn-open-folder")
-                yield Button("返回主菜单", variant="primary", id="btn-back")
+                yield Button("返回主菜单", variant="warning", id="btn-back")
         yield Footer()
 
     def on_mount(self) -> None:
