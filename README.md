@@ -1,15 +1,8 @@
 <div align="center">
 
-```
- ██████╗██╗  ██╗██╗███████╗███████╗██╗
-██╔════╝██║  ██║██║██╔════╝██╔════╝██║
-██║     ███████║██║███████╗█████╗  ██║
-██║     ██╔══██║██║╚════██║██╔══╝  ██║
-╚██████╗██║  ██║██║███████║███████╗███████╗
- ╚═════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝
-```
+<img width="657" height="256" alt="screenshot_2026-07-08-204226" src="https://github.com/user-attachments/assets/1c45e549-379b-4c29-b6da-8dc4e0165e8d" />
 
-**Claude Code 会话历史记录迁移工具**
+<h1 align="center">Claude Code 历史记录迁移工具</h1>
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![Textual](https://img.shields.io/badge/Textual-0.80+-0175C2)](https://github.com/Textualize/textual)
